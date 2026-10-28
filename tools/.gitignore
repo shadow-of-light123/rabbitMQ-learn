@@ -1,0 +1,6 @@
+# 便携版运行时的产物：体积巨大且可重新下载，不入库
+*.zip
+erlang/
+rabbitmq/
+data/
+_rmq_tmp/
