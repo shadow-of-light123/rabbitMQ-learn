@@ -1,0 +1,42 @@
+# 端口用 8081，避开常见的 8080 占用（本机 8080 被 webpack-dev-server 占着）
+server:
+  port: 8081
+
+spring:
+  application:
+    name: rabbitmq-learn
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /
+
+    # ===== 考点1：生产者可靠性投递 =====
+    # correlated: 异步回调 ConfirmCallback，能拿到 correlationData 对应到具体消息
+    publisher-confirm-type: correlated
+    # true: 开启 ReturnsCallback（消息到了交换机但路由不到队列时回调）
+    publisher-returns: true
+    template:
+      # mandatory=true 才会触发 Return 回调；false 时路由失败的消息被静默丢弃
+      mandatory: true
+
+    listener:
+      simple:
+        # ===== 考点2：手动 ACK =====
+        # manual: 需要业务代码显式 basicAck / basicNack，消费者宕机不丢消息
+        acknowledge-mode: manual
+        # ===== 考点3：消费者限流 =====
+        # 每个消费者最多预取 1 条，处理完才拿下一批，防止消费者被打垮
+        prefetch: 1
+        concurrency: 1
+        max-concurrency: 5
+        # 手动 ACK 模式下必须关掉自动重试，否则与手动 ACK 语义冲突
+        retry:
+          enabled: false
+
+logging:
+  level:
+    com.example.rabbitmqlearn: debug
+    org.springframework.amqp: info
